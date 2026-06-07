@@ -17,6 +17,7 @@ class Config
     public static function make(Finder $finder, array $rules = []): PhpCsFixerConfig
     {
         return (new PhpCsFixerConfig)
+            ->setRiskyAllowed(true)
             ->setParallelConfig(ParallelConfigFactory::detect())
             ->setUnsupportedPhpVersionAllowed(true)
             ->registerCustomFixers([
@@ -45,6 +46,7 @@ class Config
             'backtick_to_shell_exec'                           => true,
             'class_reference_name_casing'                      => true,
             'clean_namespace'                                  => true,
+            'control_structure_braces'                         => true,
             'declare_parentheses'                              => true,
             'echo_tag_syntax'                                  => true,
             'empty_loop_condition'                             => true,
@@ -108,9 +110,11 @@ class Config
             'single_space_around_construct'                    => true,
             'standardize_increment'                            => true,
             'standardize_not_equals'                           => true,
+            'static_lambda'                                    => true,
             'switch_continue_to_break'                         => true,
             'trim_array_spaces'                                => true,
             'unary_operator_spaces'                            => true,
+            'use_arrow_functions'                              => true,
             'whitespace_after_comma_in_array'                  => true,
 
             'align_multiline_comment'             => [

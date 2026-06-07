@@ -32,10 +32,7 @@ Create a `.php-cs-fixer.php` file in your project:
 ```php
 <?php
 
-use ChiefTools\PhpCsFixer\Config;
-use PhpCsFixer\Finder;
-
-$finder = Finder::create()
+$finder = PhpCsFixer\Finder::create()
     ->in(__DIR__ . '/app')
     ->in(__DIR__ . '/tests')
     ->in(__DIR__ . '/config')
@@ -45,7 +42,8 @@ $finder = Finder::create()
     ->ignoreDotFiles(true)
     ->ignoreVCS(true);
 
-return Config::make($finder);
+return ChiefTools\PhpCsFixer\Config::make($finder);
+
 ```
 
 ### Custom project rules
@@ -53,8 +51,8 @@ return Config::make($finder);
 Project rules may be merged on top of the Chief Tools defaults:
 
 ```php
-return Config::make($finder, [
-    'yoda_style' => true,
+return ChiefTools\PhpCsFixer\Config::make($finder, [
+    'yoda_style'      => true,
     'ordered_imports' => [
         'sort_algorithm' => 'alpha',
     ],

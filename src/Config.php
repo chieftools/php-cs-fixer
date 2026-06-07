@@ -16,11 +16,12 @@ class Config
     public static function make(Finder $finder, array $rules = []): PhpCsFixerConfig
     {
         return (new PhpCsFixerConfig)
+            ->setParallelConfig(ParallelConfigFactory::detect())
+            ->setUnsupportedPhpVersionAllowed(true)
             ->registerCustomFixers([
                 new NestedMethodChainingIndentationFixer,
                 new PhpdocFullyQualifiedClassNamesFixer,
             ])
-            ->setParallelConfig(ParallelConfigFactory::detect())
             ->setRules(array_replace_recursive(self::rules(), $rules))
             ->setFinder($finder);
     }

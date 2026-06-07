@@ -110,7 +110,6 @@ class Config
             'single_space_around_construct'                    => true,
             'standardize_increment'                            => true,
             'standardize_not_equals'                           => true,
-            'static_lambda'                                    => true,
             'switch_continue_to_break'                         => true,
             'trim_array_spaces'                                => true,
             'unary_operator_spaces'                            => true,

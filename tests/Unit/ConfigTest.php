@@ -17,7 +17,12 @@ class ConfigTest extends TestCase
         $this->assertInstanceOf(PhpCsFixerConfig::class, $config);
         $this->assertSame($finder, $config->getFinder());
         $this->assertTrue($config->getRules()['ChiefTools/phpdoc_fqcn']);
+        $this->assertTrue($config->getRules()['ChiefTools/nested_method_chaining_indentation']);
         $this->assertContains('ChiefTools/phpdoc_fqcn', array_map(
+            static fn ($fixer): string => $fixer->getName(),
+            $config->getCustomFixers(),
+        ));
+        $this->assertContains('ChiefTools/nested_method_chaining_indentation', array_map(
             static fn ($fixer): string => $fixer->getName(),
             $config->getCustomFixers(),
         ));

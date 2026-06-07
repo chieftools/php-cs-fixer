@@ -6,6 +6,7 @@ use PhpCsFixer\Finder;
 use PhpCsFixer\Config as PhpCsFixerConfig;
 use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 use ChiefTools\PhpCsFixer\Fixer\PhpdocFullyQualifiedClassNamesFixer;
+use ChiefTools\PhpCsFixer\Fixer\NestedMethodChainingIndentationFixer;
 
 class Config
 {
@@ -15,7 +16,10 @@ class Config
     public static function make(Finder $finder, array $rules = []): PhpCsFixerConfig
     {
         return (new PhpCsFixerConfig)
-            ->registerCustomFixers([new PhpdocFullyQualifiedClassNamesFixer])
+            ->registerCustomFixers([
+                new NestedMethodChainingIndentationFixer,
+                new PhpdocFullyQualifiedClassNamesFixer,
+            ])
             ->setParallelConfig(ParallelConfigFactory::detect())
             ->setRules(array_replace_recursive(self::rules(), $rules))
             ->setFinder($finder);
@@ -29,7 +33,8 @@ class Config
         return [
             '@Symfony' => true,
 
-            'ChiefTools/phpdoc_fqcn' => true,
+            'ChiefTools/phpdoc_fqcn'                        => true,
+            'ChiefTools/nested_method_chaining_indentation' => true,
 
             'yoda_style'                                       => false,
             'phpdoc_order'                                     => true,

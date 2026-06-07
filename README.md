@@ -90,3 +90,17 @@ This rule expands imported class names inside PHPDoc annotations:
 ```
 
 Executable PHP type hints may still use normal imports.
+
+#### `ChiefTools/nested_method_chaining_indentation`
+
+This rule keeps nested argument method chains aligned with the first object operator on the expression line:
+
+```diff
+  return wrap(
+      $service->items()
+-         ->filter()
++             ->filter()
+  );
+```
+
+Statement-level chains still use PHP CS Fixer's regular `method_chaining_indentation` behavior.

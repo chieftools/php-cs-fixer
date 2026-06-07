@@ -17,7 +17,6 @@ class Config
     public static function make(Finder $finder, array $rules = []): PhpCsFixerConfig
     {
         return (new PhpCsFixerConfig)
-            ->setRiskyAllowed(true)
             ->setParallelConfig(ParallelConfigFactory::detect())
             ->setUnsupportedPhpVersionAllowed(true)
             ->registerCustomFixers([
@@ -113,7 +112,6 @@ class Config
             'switch_continue_to_break'                         => true,
             'trim_array_spaces'                                => true,
             'unary_operator_spaces'                            => true,
-            'use_arrow_functions'                              => true,
             'whitespace_after_comma_in_array'                  => true,
 
             'align_multiline_comment'             => [

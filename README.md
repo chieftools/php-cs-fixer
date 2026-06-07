@@ -91,6 +91,19 @@ This rule expands imported class names inside PHPDoc annotations:
 
 Executable PHP type hints may still use normal imports.
 
+#### `ChiefTools/binary_operator_alignment`
+
+This rule keeps contiguous assignment and array-pair operators minimally aligned, while blank lines split alignment groups:
+
+```diff
+- $data      = [];
+- $otherDate = $date
++ $data       = [];
++ $otherDate  = $date
+      ->addDays(5);
+  $commonDate = now();
+```
+
 #### `ChiefTools/nested_method_chaining_indentation`
 
 This rule keeps nested argument method chains aligned with the first object operator on the expression line:

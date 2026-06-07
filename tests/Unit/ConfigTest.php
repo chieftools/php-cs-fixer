@@ -2,10 +2,14 @@
 
 namespace ChiefTools\PhpCsFixer\Tests\Unit;
 
+use SplFileInfo;
 use PhpCsFixer\Finder;
 use PHPUnit\Framework\TestCase;
+use PhpCsFixer\Tokenizer\Tokens;
 use ChiefTools\PhpCsFixer\Config;
 use PhpCsFixer\Config as PhpCsFixerConfig;
+use PhpCsFixer\Fixer\Operator\BinaryOperatorSpacesFixer;
+use ChiefTools\PhpCsFixer\Fixer\BinaryOperatorAlignmentFixer;
 
 class ConfigTest extends TestCase
 {
@@ -16,8 +20,13 @@ class ConfigTest extends TestCase
 
         $this->assertInstanceOf(PhpCsFixerConfig::class, $config);
         $this->assertSame($finder, $config->getFinder());
+        $this->assertTrue($config->getRules()['ChiefTools/binary_operator_alignment']);
         $this->assertTrue($config->getRules()['ChiefTools/phpdoc_fqcn']);
         $this->assertTrue($config->getRules()['ChiefTools/nested_method_chaining_indentation']);
+        $this->assertContains('ChiefTools/binary_operator_alignment', array_map(
+            static fn ($fixer): string => $fixer->getName(),
+            $config->getCustomFixers(),
+        ));
         $this->assertContains('ChiefTools/phpdoc_fqcn', array_map(
             static fn ($fixer): string => $fixer->getName(),
             $config->getCustomFixers(),
@@ -42,5 +51,99 @@ class ConfigTest extends TestCase
         $this->assertTrue($rules['yoda_style']);
         $this->assertSame('alpha', $rules['ordered_imports']['sort_algorithm']);
         $this->assertSame(['class', 'const', 'function'], $rules['ordered_imports']['imports_order']);
+    }
+
+    public function testAssignmentsUseMinimalVerticalAlignment(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function values(): void
+{
+    $shortName      = 1;
+    $longerName     = 2;
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+function values(): void
+{
+    $shortName  = 1;
+    $longerName = 2;
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fixBinaryOperators($source));
+    }
+
+    public function testArrayPairsAreVerticallyAligned(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function values(): array
+{
+    return [
+        'short' => 1,
+        'longer_key' => 2,
+    ];
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+function values(): array
+{
+    return [
+        'short'      => 1,
+        'longer_key' => 2,
+    ];
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fixBinaryOperators($source));
+    }
+
+    public function testNestedArrayPairsKeepExistingVerticalAlignment(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function values(): array
+{
+    return [
+        'short'    => [
+            'value' => 1,
+        ],
+        'long_key' => [
+            'value' => 2,
+        ],
+    ];
+}
+
+PHP;
+
+        $this->assertSame($source, $this->fixBinaryOperators($source));
+    }
+
+    private function fixBinaryOperators(string $source): string
+    {
+        $config = Config::rules()['binary_operator_spaces'];
+        $tokens = Tokens::fromCode($source);
+        $fixer  = new BinaryOperatorSpacesFixer;
+
+        $this->assertIsArray($config);
+        $fixer->configure($config);
+        $fixer->fix(new SplFileInfo(__FILE__), $tokens);
+        (new BinaryOperatorAlignmentFixer)->fix(new SplFileInfo(__FILE__), $tokens);
+
+        return $tokens->generateCode();
     }
 }

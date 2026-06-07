@@ -5,6 +5,7 @@ namespace ChiefTools\PhpCsFixer;
 use PhpCsFixer\Finder;
 use PhpCsFixer\Config as PhpCsFixerConfig;
 use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
+use ChiefTools\PhpCsFixer\Fixer\BinaryOperatorAlignmentFixer;
 use ChiefTools\PhpCsFixer\Fixer\PhpdocFullyQualifiedClassNamesFixer;
 use ChiefTools\PhpCsFixer\Fixer\NestedMethodChainingIndentationFixer;
 
@@ -19,6 +20,7 @@ class Config
             ->setParallelConfig(ParallelConfigFactory::detect())
             ->setUnsupportedPhpVersionAllowed(true)
             ->registerCustomFixers([
+                new BinaryOperatorAlignmentFixer,
                 new NestedMethodChainingIndentationFixer,
                 new PhpdocFullyQualifiedClassNamesFixer,
             ])
@@ -34,6 +36,7 @@ class Config
         return [
             '@Symfony' => true,
 
+            'ChiefTools/binary_operator_alignment'          => true,
             'ChiefTools/phpdoc_fqcn'                        => true,
             'ChiefTools/nested_method_chaining_indentation' => true,
 
@@ -55,51 +58,51 @@ class Config
             'single_trait_insert_per_statement'                => false,
             'nullable_type_declaration_for_default_null_value' => true,
 
-            'concat_space'        => [
+            'concat_space'                 => [
                 'spacing' => 'one',
             ],
-            'array_syntax'        => [
+            'array_syntax'                 => [
                 'syntax' => 'short',
             ],
-            'ordered_types'       => [
+            'ordered_types'                => [
                 'sort_algorithm'  => 'none',
                 'null_adjustment' => 'always_last',
             ],
-            'ordered_imports'     => [
+            'ordered_imports'              => [
                 'imports_order'  => ['class', 'const', 'function'],
                 'sort_algorithm' => 'length',
             ],
-            'cast_spaces'         => [
+            'cast_spaces'                  => [
                 'space' => 'none',
             ],
-            'new_with_parentheses' => [
+            'new_with_parentheses'         => [
                 'named_class'     => false,
                 'anonymous_class' => false,
             ],
-            'curly_braces_position' => [
+            'curly_braces_position'        => [
                 'anonymous_classes_opening_brace' => 'next_line_unless_newline_at_signature_end',
             ],
-            'align_multiline_comment' => [
+            'align_multiline_comment'      => [
                 'comment_type' => 'phpdocs_like',
             ],
-            'global_namespace_import' => [
+            'global_namespace_import'      => [
                 'import_classes'   => null,
                 'import_constants' => null,
                 'import_functions' => true,
             ],
-            'type_declaration_spaces' => [
+            'type_declaration_spaces'      => [
                 'elements' => [],
             ],
-            'nullable_type_declaration' => [
+            'nullable_type_declaration'    => [
                 'syntax' => 'question_mark',
             ],
-            'attribute_empty_parentheses' => [
+            'attribute_empty_parentheses'  => [
                 'use_parentheses' => false,
             ],
-            'trailing_comma_in_multiline' => [
+            'trailing_comma_in_multiline'  => [
                 'elements' => ['arrays', 'arguments', 'parameters', 'match'],
             ],
-            'phpdoc_align' => [
+            'phpdoc_align'                 => [
                 'align' => 'vertical',
                 'tags'  => [
                     'param',
@@ -113,32 +116,32 @@ class Config
                     'method',
                 ],
             ],
-            'increment_style'     => [
+            'increment_style'              => [
                 'style' => 'post',
             ],
-            'phpdoc_no_alias_tag' => [
+            'phpdoc_no_alias_tag'          => [
                 'replacements' => [
                     'type' => 'var',
                     'link' => 'see',
                 ],
             ],
-            'no_extra_blank_lines' => [
+            'no_extra_blank_lines'         => [
                 'tokens' => [],
             ],
-            'function_declaration' => [
+            'function_declaration'         => [
                 'closure_function_spacing' => 'one',
             ],
-            'binary_operator_spaces' => [
+            'binary_operator_spaces'       => [
                 'operators' => [
                     '|'  => null,
-                    '='  => 'align_single_space',
+                    '='  => 'align_single_space_minimal',
                     '=>' => 'align_single_space',
                 ],
             ],
             'fully_qualified_strict_types' => [
                 'phpdoc_tags' => [],
             ],
-            'no_alternative_syntax' => [
+            'no_alternative_syntax'        => [
                 'fix_non_monolithic_code' => false,
             ],
         ];

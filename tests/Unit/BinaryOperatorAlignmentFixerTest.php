@@ -16,12 +16,12 @@ class BinaryOperatorAlignmentFixerTest extends TestCase
         $source = <<<'PHP'
 <?php
 
-function values($date): void
+function values($value): void
 {
-    $data      = [];
-    $otherDate = $date
-        ->addDays(5);
-    $commonDate = now();
+    $a = [];
+    $bb = $value
+        ->call();
+    $ccc = 1;
 }
 
 PHP;
@@ -29,12 +29,12 @@ PHP;
         $expected = <<<'PHP'
 <?php
 
-function values($date): void
+function values($value): void
 {
-    $data       = [];
-    $otherDate  = $date
-        ->addDays(5);
-    $commonDate = now();
+    $a   = [];
+    $bb  = $value
+        ->call();
+    $ccc = 1;
 }
 
 PHP;
@@ -47,13 +47,13 @@ PHP;
         $source = <<<'PHP'
 <?php
 
-function values($date): void
+function values($value): void
 {
-    $data      = [];
-    $otherDate = $date
-        ->addDays(5);
+    $a = [];
+    $bb = $value
+        ->call();
 
-    $commonDate = now();
+    $ccc = 1;
 }
 
 PHP;
@@ -61,18 +61,134 @@ PHP;
         $expected = <<<'PHP'
 <?php
 
-function values($date): void
+function values($value): void
 {
-    $data      = [];
-    $otherDate = $date
-        ->addDays(5);
+    $a  = [];
+    $bb = $value
+        ->call();
 
-    $commonDate = now();
+    $ccc = 1;
 }
 
 PHP;
 
         $this->assertSame($expected, $this->fix($source));
+    }
+
+    public function testItAlignsPropertyAssignmentsAcrossContinuationLines(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+class Values
+{
+    protected $short = [
+        'a',
+    ];
+    protected $longer = [
+        'b',
+    ];
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+class Values
+{
+    protected $short  = [
+        'a',
+    ];
+    protected $longer = [
+        'b',
+    ];
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
+    }
+
+    public function testItAlignsClassConstantAssignments(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+class Values
+{
+    public const SHORT = 'short';
+    public const LONGER = 'longer';
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+class Values
+{
+    public const SHORT  = 'short';
+    public const LONGER = 'longer';
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
+    }
+
+    public function testItDoesNotAlignObjectPropertyAssignments(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+class Values
+{
+    public function update(): void
+    {
+        $this->longName = 1;
+        $this->short = 2;
+    }
+}
+
+PHP;
+
+        $this->assertSame($source, $this->fix($source));
+    }
+
+    public function testItDoesNotAlignArrayOffsetAssignments(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function values(array $items, string $key): void
+{
+    $items[$key][] = 1;
+    $items[$key] = [2];
+}
+
+PHP;
+
+        $this->assertSame($source, $this->fix($source));
+    }
+
+    public function testItDoesNotAlignAssignmentsAcrossDifferentControlStructureBlocks(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function values(bool $flag): void
+{
+    if ($flag) {
+        $short = 1;
+    } else {
+        $longer = 2;
+    }
+}
+
+PHP;
+
+        $this->assertSame($source, $this->fix($source));
     }
 
     public function testItUsesMinimalArrayPairAlignment(): void

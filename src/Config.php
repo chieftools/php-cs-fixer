@@ -125,7 +125,7 @@ class Config
             'binary_operator_spaces'              => [
                 'operators' => [
                     '|'  => null,
-                    '='  => 'align_single_space_minimal',
+                    '='  => 'align_single_space',
                     '=>' => 'align_single_space',
                 ],
             ],

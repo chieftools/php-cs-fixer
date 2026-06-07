@@ -10,20 +10,16 @@ use ChiefTools\PhpCsFixer\Fixer\NestedMethodChainingIndentationFixer;
 
 class NestedMethodChainingIndentationFixerTest extends TestCase
 {
-    public function testItAlignsNestedArgumentChainsWithTheFirstOperatorOnTheExpressionLine(): void
+    public function testItAlignsNestedArgumentChainsWithTheFirstOperatorOnTheLine(): void
     {
         $source = <<<'PHP'
 <?php
 
-function build($service, $handler)
+function build($item)
 {
     return wrap(
-        $service->items()
-            ->filter(function ($item) {
-                $item->query()
-                    ->where('active', true);
-            }),
-        $handler,
+        $item->one()
+            ->two(),
     );
 }
 
@@ -32,15 +28,11 @@ PHP;
         $expected = <<<'PHP'
 <?php
 
-function build($service, $handler)
+function build($item)
 {
     return wrap(
-        $service->items()
-                ->filter(function ($item) {
-                    $item->query()
-                         ->where('active', true);
-                }),
-        $handler,
+        $item->one()
+             ->two(),
     );
 }
 
@@ -54,11 +46,11 @@ PHP;
         $source = <<<'PHP'
 <?php
 
-function find($value)
+function find($item)
 {
-    return Query::make()
-               ->where('name', $value)
-               ->first();
+    return $item->one()
+                ->two()
+                ->three();
 }
 
 PHP;
@@ -66,11 +58,11 @@ PHP;
         $expected = <<<'PHP'
 <?php
 
-function find($value)
+function find($item)
 {
-    return Query::make()
-        ->where('name', $value)
-        ->first();
+    return $item->one()
+        ->two()
+        ->three();
 }
 
 PHP;
@@ -83,15 +75,14 @@ PHP;
         $source = <<<'PHP'
 <?php
 
-function build($record, $owner)
+function build($item)
 {
     wrap(
-        $record->children()
-            ->create([
-                'state' => 'open',
-                'owner_id' => $owner->id,
-            ])
-            ->finish(),
+        $item->one()
+            ->two(
+                1,
+            )
+            ->three(),
     );
 }
 
@@ -100,15 +91,14 @@ PHP;
         $expected = <<<'PHP'
 <?php
 
-function build($record, $owner)
+function build($item)
 {
     wrap(
-        $record->children()
-               ->create([
-                   'state' => 'open',
-                   'owner_id' => $owner->id,
-               ])
-               ->finish(),
+        $item->one()
+             ->two(
+                 1,
+             )
+             ->three(),
     );
 }
 
@@ -122,14 +112,13 @@ PHP;
         $source = <<<'PHP'
 <?php
 
-function build($record, $owner)
+function build($item)
 {
-    $record->children()
-           ->create([
-               'state' => 'open',
-               'owner_id' => $owner->id,
-           ])
-           ->finish();
+    $item->one()
+         ->two(
+             1,
+         )
+         ->three();
 }
 
 PHP;
@@ -137,14 +126,13 @@ PHP;
         $expected = <<<'PHP'
 <?php
 
-function build($record, $owner)
+function build($item)
 {
-    $record->children()
-        ->create([
-            'state' => 'open',
-            'owner_id' => $owner->id,
-        ])
-        ->finish();
+    $item->one()
+        ->two(
+            1,
+        )
+        ->three();
 }
 
 PHP;
@@ -157,13 +145,12 @@ PHP;
         $source = <<<'PHP'
 <?php
 
-function build($target, $source)
+function build($item)
 {
-    wrap(function () use ($target, $source) {
-        $result = $target->items
-            ->where('user_id', '=', $source->user_id)
-            ->where('type', '=', $source->value->type)
-            ->sole();
+    wrap(function () use ($item) {
+        $result = $item->one
+            ->two()
+            ->three();
     });
 }
 
@@ -177,10 +164,10 @@ PHP;
         $source = <<<'PHP'
 <?php
 
-function checkResponse($context)
+function build($item)
 {
-    request(resolve([$context->identifier]))
-        ->assertValid();
+    wrap([$item->value])
+        ->done();
 }
 
 PHP;

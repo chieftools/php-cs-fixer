@@ -49,12 +49,14 @@ PHP,
 
     protected function applyFix(SplFileInfo $file, Tokens $tokens): void
     {
-        $code    = $tokens->generateCode();
-        $lines   = $this->lines($code);
-        $records = $this->operatorRecords($tokens);
+        $code                       = $tokens->generateCode();
+        $lines                      = $this->lines($code);
+        $records                    = $this->operatorRecords($tokens);
+        $nonTargetAssignmentRecords = $this->nonTargetAssignmentRecords($tokens);
 
         $lines = $this->alignOperator($lines, $records, '=');
         $lines = $this->alignOperator($lines, $records, '=>');
+        $lines = $this->normalizeAssignmentOperatorSpacing($lines, $nonTargetAssignmentRecords);
 
         $fixedCode = implode('', array_map(
             static fn (array $line): string => $line['content'] . $line['ending'],
@@ -126,10 +128,48 @@ PHP,
         return $records;
     }
 
+    /**
+     * @return array<int, list<int>>
+     */
+    private function nonTargetAssignmentRecords(Tokens $tokens): array
+    {
+        $analyzer = new TokensAnalyzer($tokens);
+        $records  = [];
+        $line     = 0;
+        $column   = 0;
+
+        foreach ($tokens as $index => $token) {
+            $content = $token->getContent();
+
+            if (
+                $tokens[$index]->equals('=')
+                && $analyzer->isBinaryOperator($index)
+                && !$this->isAssignmentTargetLinePrefix($this->linePrefixBeforeToken($tokens, $index))
+            ) {
+                $records[$line][] = $column;
+            }
+
+            $parts = preg_split('/\R/', $content);
+
+            if ($parts === false || count($parts) === 1) {
+                $column += strlen($content);
+
+                continue;
+            }
+
+            $line += count($parts) - 1;
+            $column = strlen($parts[array_key_last($parts)]);
+        }
+
+        return $records;
+    }
+
     private function operatorGroup(Tokens $tokens, int $index, string $operator): string
     {
         if ($operator === '=') {
-            return '=' . $this->lineIndentAt($tokens->generateCode(), $this->lineNumberAt($tokens, $index));
+            $blockStartIndex = $this->nearestContainingBlockStart($tokens, $index);
+
+            return '=' . ($blockStartIndex ?? $this->lineIndentAt($tokens->generateCode(), $this->lineNumberAt($tokens, $index)));
         }
 
         $blockStartIndex = $this->nearestContainingBlockStart($tokens, $index);
@@ -183,9 +223,22 @@ PHP,
             return false;
         }
 
-        $linePrefix = $this->linePrefixBeforeToken($tokens, $index);
+        return $this->isAssignmentTargetLinePrefix($this->linePrefixBeforeToken($tokens, $index));
+    }
 
-        return str_starts_with(ltrim($linePrefix), '$');
+    private function isAssignmentTargetLinePrefix(string $linePrefix): bool
+    {
+        if (preg_match('/^\h*\$[A-Za-z_]\w*\h*$/', $linePrefix) === 1) {
+            return true;
+        }
+
+        return preg_match(
+            '/^\h*(?:(?:public|protected|private|static|readonly|var)\h+)+(?:[?\\\\\w|&<>,\[\]\h]+\h+)?\$[A-Za-z_]\w*\h*$/',
+            $linePrefix,
+        ) === 1 || preg_match(
+            '/^\h*(?:(?:public|protected|private|final)\h+)*const\h+(?:[?\\\\\w|&<>,\[\]\h]+\h+)?[A-Za-z_]\w*\h*$/',
+            $linePrefix,
+        ) === 1;
     }
 
     private function isArrowFunctionArrow(Tokens $tokens, int $index): bool
@@ -248,8 +301,8 @@ PHP,
                 continue;
             }
 
-            $record                               = $operators[$operator];
-            $segment                              = $this->segmentAt($lines, $line);
+            $record  = $operators[$operator];
+            $segment = $this->segmentAt($lines, $line);
             $groups[$segment][$record['group']][] = [
                 'line'   => $line,
                 'column' => $record['column'],
@@ -259,6 +312,34 @@ PHP,
         foreach ($groups as $segmentGroups) {
             foreach ($segmentGroups as $group) {
                 $lines = $this->alignGroup($lines, $group);
+            }
+        }
+
+        return $lines;
+    }
+
+    /**
+     * @param list<array{content: string, ending: string}> $lines
+     * @param array<int, list<int>>                        $records
+     *
+     * @return list<array{content: string, ending: string}>
+     */
+    private function normalizeAssignmentOperatorSpacing(array $lines, array $records): array
+    {
+        foreach ($records as $line => $columns) {
+            rsort($columns);
+
+            foreach ($columns as $column) {
+                $content = $lines[$line]['content'];
+
+                if (($content[$column] ?? null) !== '=') {
+                    continue;
+                }
+
+                $before = substr($content, 0, $column);
+                $after  = substr($content, $column + 1);
+
+                $lines[$line]['content'] = rtrim($before) . ' = ' . ltrim($after);
             }
         }
 

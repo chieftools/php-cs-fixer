@@ -18,6 +18,7 @@ class Config
     {
         return (new PhpCsFixerConfig)
             ->setParallelConfig(ParallelConfigFactory::detect())
+            ->setRuleCustomisationPolicy(new PackageCacheInvalidationPolicy)
             ->setUnsupportedPhpVersionAllowed(true)
             ->registerCustomFixers([
                 new BinaryOperatorAlignmentFixer,

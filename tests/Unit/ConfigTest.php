@@ -54,6 +54,15 @@ class ConfigTest extends TestCase
         $this->assertSame(['class', 'const', 'function'], $rules['ordered_imports']['imports_order']);
     }
 
+    public function testItAddsPackageVersionToTheCacheSignature(): void
+    {
+        $policy = Config::make(Finder::create()->in(__DIR__))->getRuleCustomisationPolicy();
+
+        $this->assertNotNull($policy);
+        $this->assertSame([], $policy->getRuleCustomisers());
+        $this->assertStringStartsWith('chieftools/php-cs-fixer:', $policy->getPolicyVersionForCache());
+    }
+
     public function testRulesUsePerBaseWithoutSymfonyRuleSet(): void
     {
         $rules        = Config::rules();

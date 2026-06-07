@@ -156,6 +156,33 @@ PHP;
         $this->assertSame($expected, $this->fix($source));
     }
 
+    public function testItAlignsEnumCaseAssignments(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+enum Values: string
+{
+    case A = 'a';
+    case BB = 'bb';
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+enum Values: string
+{
+    case A  = 'a';
+    case BB = 'bb';
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
+    }
+
     public function testItAlignsObjectPropertyAssignments(): void
     {
         $source = <<<'PHP'
@@ -209,6 +236,33 @@ function update($item, string $name): void
 {
     $item->{$name} = 1;
     $item->flag    = 2;
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
+    }
+
+    public function testItAlignsNestedObjectPropertyAssignments(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function update($item): void
+{
+    $item->child->a = 1;
+    $item->child->long = 2;
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+function update($item): void
+{
+    $item->child->a    = 1;
+    $item->child->long = 2;
 }
 
 PHP;
@@ -297,6 +351,36 @@ function values(bool $flag): void
 PHP;
 
         $this->assertSame($source, $this->fix($source));
+    }
+
+    public function testItMovesSingleLineDestructuringAssignmentValuesOntoTheAssignmentLine(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function values(): void
+{
+    [
+        $a,
+    ] =
+        value();
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+function values(): void
+{
+    [
+        $a,
+    ] = value();
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
     }
 
     public function testItUsesMinimalArrayPairAlignment(): void

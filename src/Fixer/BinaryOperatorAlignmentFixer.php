@@ -264,7 +264,7 @@ PHP,
             return true;
         }
 
-        if (preg_match('/^\h*\$[A-Za-z_]\w*->(?:\w+|\{.*\})\h*$/', $linePrefix) === 1) {
+        if (preg_match('/^\h*\$[A-Za-z_]\w*(?:->(?:\w+|\{.*\}))+\h*$/', $linePrefix) === 1) {
             return true;
         }
 
@@ -277,6 +277,9 @@ PHP,
             $linePrefix,
         ) === 1 || preg_match(
             '/^\h*(?:(?:public|protected|private|final)\h+)*const\h+(?:[?\\\\\w|&<>,\[\]\h]+\h+)?[A-Za-z_]\w*\h*$/',
+            $linePrefix,
+        ) === 1 || preg_match(
+            '/^\h*case\h+[A-Za-z_]\w*\h*$/',
             $linePrefix,
         ) === 1;
     }
@@ -366,10 +369,16 @@ PHP,
      */
     private function normalizeAssignmentOperatorSpacing(array $lines, array $records): array
     {
+        krsort($records);
+
         foreach ($records as $line => $columns) {
             rsort($columns);
 
             foreach ($columns as $column) {
+                if (!isset($lines[$line])) {
+                    continue;
+                }
+
                 $content = $lines[$line]['content'];
 
                 if (($content[$column] ?? null) !== '=') {
@@ -378,12 +387,35 @@ PHP,
 
                 $before = substr($content, 0, $column);
                 $after  = substr($content, $column + 1);
+                $value  = ltrim($after);
 
-                $lines[$line]['content'] = rtrim($before) . ' = ' . ltrim($after);
+                if ($value === '' && $this->canInlineAssignmentContinuation($lines, $line + 1)) {
+                    $lines[$line]['content'] = rtrim($before) . ' = ' . ltrim($lines[$line + 1]['content']);
+
+                    array_splice($lines, $line + 1, 1);
+
+                    continue;
+                }
+
+                $lines[$line]['content'] = rtrim($before) . ($value === '' ? ' =' : ' = ' . $value);
             }
         }
 
         return $lines;
+    }
+
+    /**
+     * @param list<array{content: string, ending: string}> $lines
+     */
+    private function canInlineAssignmentContinuation(array $lines, int $line): bool
+    {
+        if (!isset($lines[$line])) {
+            return false;
+        }
+
+        $content = trim($lines[$line]['content']);
+
+        return $content !== '' && str_ends_with($content, ';');
     }
 
     /**

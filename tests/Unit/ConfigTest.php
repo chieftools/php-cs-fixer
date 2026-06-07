@@ -4,6 +4,7 @@ namespace ChiefTools\PhpCsFixer\Tests\Unit;
 
 use SplFileInfo;
 use PhpCsFixer\Finder;
+use PhpCsFixer\RuleSet\RuleSet;
 use PHPUnit\Framework\TestCase;
 use PhpCsFixer\Tokenizer\Tokens;
 use ChiefTools\PhpCsFixer\Config;
@@ -51,6 +52,21 @@ class ConfigTest extends TestCase
         $this->assertTrue($rules['yoda_style']);
         $this->assertSame('alpha', $rules['ordered_imports']['sort_algorithm']);
         $this->assertSame(['class', 'const', 'function'], $rules['ordered_imports']['imports_order']);
+    }
+
+    public function testRulesUsePerBaseWithoutSymfonyRuleSet(): void
+    {
+        $rules        = Config::rules();
+        $metaRuleSets = array_values(array_filter(
+            array_keys($rules),
+            static fn (string $rule): bool => str_starts_with($rule, '@'),
+        ));
+
+        $this->assertSame(['@PER-CS3x0'], $metaRuleSets);
+
+        foreach (array_keys((new RuleSet($rules))->getRules()) as $rule) {
+            $this->assertStringStartsNotWith('@', $rule);
+        }
     }
 
     public function testAssignmentsUseMinimalVerticalAlignment(): void

@@ -36,8 +36,8 @@ class Config
         return [
             '@Symfony' => true,
 
-            'ChiefTools/binary_operator_alignment'          => true,
             'ChiefTools/phpdoc_fqcn'                        => true,
+            'ChiefTools/binary_operator_alignment'          => true,
             'ChiefTools/nested_method_chaining_indentation' => true,
 
             'yoda_style'                                       => false,
@@ -58,11 +58,28 @@ class Config
             'single_trait_insert_per_statement'                => false,
             'nullable_type_declaration_for_default_null_value' => true,
 
+            'cast_spaces'                  => [
+                'space' => 'none',
+            ],
             'concat_space'                 => [
                 'spacing' => 'one',
             ],
             'array_syntax'                 => [
                 'syntax' => 'short',
+            ],
+            'phpdoc_align'                 => [
+                'align' => 'vertical',
+                'tags'  => [
+                    'param',
+                    'property',
+                    'property-read',
+                    'property-write',
+                    'return',
+                    'throws',
+                    'type',
+                    'var',
+                    'method',
+                ],
             ],
             'ordered_types'                => [
                 'sort_algorithm'  => 'none',
@@ -72,8 +89,20 @@ class Config
                 'imports_order'  => ['class', 'const', 'function'],
                 'sort_algorithm' => 'length',
             ],
-            'cast_spaces'                  => [
-                'space' => 'none',
+            'increment_style'              => [
+                'style' => 'post',
+            ],
+            'phpdoc_no_alias_tag'          => [
+                'replacements' => [
+                    'type' => 'var',
+                    'link' => 'see',
+                ],
+            ],
+            'function_declaration'         => [
+                'closure_function_spacing' => 'one',
+            ],
+            'no_extra_blank_lines'         => [
+                'tokens' => [],
             ],
             'new_with_parentheses'         => [
                 'named_class'     => false,
@@ -81,6 +110,16 @@ class Config
             ],
             'curly_braces_position'        => [
                 'anonymous_classes_opening_brace' => 'next_line_unless_newline_at_signature_end',
+            ],
+            'no_alternative_syntax'        => [
+                'fix_non_monolithic_code' => false,
+            ],
+            'binary_operator_spaces'       => [
+                'operators' => [
+                    '|'  => null,
+                    '='  => 'align_single_space_minimal',
+                    '=>' => 'align_single_space',
+                ],
             ],
             'align_multiline_comment'      => [
                 'comment_type' => 'phpdocs_like',
@@ -102,47 +141,8 @@ class Config
             'trailing_comma_in_multiline'  => [
                 'elements' => ['arrays', 'arguments', 'parameters', 'match'],
             ],
-            'phpdoc_align'                 => [
-                'align' => 'vertical',
-                'tags'  => [
-                    'param',
-                    'property',
-                    'property-read',
-                    'property-write',
-                    'return',
-                    'throws',
-                    'type',
-                    'var',
-                    'method',
-                ],
-            ],
-            'increment_style'              => [
-                'style' => 'post',
-            ],
-            'phpdoc_no_alias_tag'          => [
-                'replacements' => [
-                    'type' => 'var',
-                    'link' => 'see',
-                ],
-            ],
-            'no_extra_blank_lines'         => [
-                'tokens' => [],
-            ],
-            'function_declaration'         => [
-                'closure_function_spacing' => 'one',
-            ],
-            'binary_operator_spaces'       => [
-                'operators' => [
-                    '|'  => null,
-                    '='  => 'align_single_space_minimal',
-                    '=>' => 'align_single_space',
-                ],
-            ],
             'fully_qualified_strict_types' => [
                 'phpdoc_tags' => [],
-            ],
-            'no_alternative_syntax'        => [
-                'fix_non_monolithic_code' => false,
             ],
         ];
     }

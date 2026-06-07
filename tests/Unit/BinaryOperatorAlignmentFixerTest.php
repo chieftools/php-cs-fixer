@@ -110,6 +110,25 @@ PHP;
         $this->assertSame($expected, $this->fix($source));
     }
 
+    public function testItDoesNotAlignPromotedParameterDefaults(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+class Values
+{
+    public function __construct(
+        private ?string $a,
+        private int $bb = 1,
+        private int $ccc = 2,
+    ) {}
+}
+
+PHP;
+
+        $this->assertSame($source, $this->fix($source));
+    }
+
     public function testItAlignsClassConstantAssignments(): void
     {
         $source = <<<'PHP'
@@ -137,7 +156,7 @@ PHP;
         $this->assertSame($expected, $this->fix($source));
     }
 
-    public function testItDoesNotAlignObjectPropertyAssignments(): void
+    public function testItAlignsObjectPropertyAssignments(): void
     {
         $source = <<<'PHP'
 <?php
@@ -153,18 +172,107 @@ class Values
 
 PHP;
 
-        $this->assertSame($source, $this->fix($source));
+        $expected = <<<'PHP'
+<?php
+
+class Values
+{
+    public function update(): void
+    {
+        $this->longName = 1;
+        $this->short    = 2;
+    }
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
     }
 
-    public function testItDoesNotAlignArrayOffsetAssignments(): void
+    public function testItAlignsDynamicObjectPropertyAssignments(): void
     {
         $source = <<<'PHP'
 <?php
 
-function values(array $items, string $key): void
+function update($item, string $name): void
 {
-    $items[$key][] = 1;
-    $items[$key] = [2];
+    $item->{$name} = 1;
+    $item->flag = 2;
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+function update($item, string $name): void
+{
+    $item->{$name} = 1;
+    $item->flag    = 2;
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
+    }
+
+    public function testItDoesNotPadSingleObjectPropertyAssignments(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+class Values
+{
+    public function update(): void
+    {
+        $this->short = 1;
+    }
+}
+
+PHP;
+
+        $this->assertSame($source, $this->fix($source));
+    }
+
+    public function testItAlignsArrayOffsetAssignments(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function values(array $items): void
+{
+    $items['long'] = 1;
+    $items['x'] = 2;
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+function values(array $items): void
+{
+    $items['long'] = 1;
+    $items['x']    = 2;
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
+    }
+
+    public function testItDoesNotAlignArrayOffsetAssignmentsAcrossDifferentControlStructureBlocks(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function values(array $items, string $key, bool $flag): void
+{
+    if ($flag) {
+        $items[$key][] = 1;
+    } else {
+        $items[$key] = [2];
+    }
 }
 
 PHP;

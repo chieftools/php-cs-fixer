@@ -144,7 +144,7 @@ PHP,
             if (
                 $tokens[$index]->equals('=')
                 && $analyzer->isBinaryOperator($index)
-                && !$this->isAssignmentTargetLinePrefix($this->linePrefixBeforeToken($tokens, $index))
+                && !$this->isAssignmentTarget($tokens, $index)
             ) {
                 $records[$line][] = $column;
             }
@@ -223,12 +223,52 @@ PHP,
             return false;
         }
 
+        return $this->isAssignmentTarget($tokens, $index);
+    }
+
+    private function isAssignmentTarget(Tokens $tokens, int $index): bool
+    {
+        if ($this->isFunctionLikeParameterDefault($tokens, $index)) {
+            return false;
+        }
+
         return $this->isAssignmentTargetLinePrefix($this->linePrefixBeforeToken($tokens, $index));
+    }
+
+    private function isFunctionLikeParameterDefault(Tokens $tokens, int $index): bool
+    {
+        $blockStartIndex = $this->nearestContainingBlockStart($tokens, $index);
+
+        if ($blockStartIndex === null || !$tokens[$blockStartIndex]->equals('(')) {
+            return false;
+        }
+
+        $previousMeaningfulIndex = $tokens->getPrevMeaningfulToken($blockStartIndex);
+
+        if ($previousMeaningfulIndex === null) {
+            return false;
+        }
+
+        if ($tokens[$previousMeaningfulIndex]->isGivenKind([T_FUNCTION, T_FN])) {
+            return true;
+        }
+
+        $beforeNameIndex = $tokens->getPrevMeaningfulToken($previousMeaningfulIndex);
+
+        return $beforeNameIndex !== null && $tokens[$beforeNameIndex]->isGivenKind(T_FUNCTION);
     }
 
     private function isAssignmentTargetLinePrefix(string $linePrefix): bool
     {
         if (preg_match('/^\h*\$[A-Za-z_]\w*\h*$/', $linePrefix) === 1) {
+            return true;
+        }
+
+        if (preg_match('/^\h*\$[A-Za-z_]\w*->(?:\w+|\{.*\})\h*$/', $linePrefix) === 1) {
+            return true;
+        }
+
+        if (preg_match('/^\h*\$[A-Za-z_]\w*(?:\[[^\r\n]*\])+\h*$/', $linePrefix) === 1) {
             return true;
         }
 
@@ -301,8 +341,8 @@ PHP,
                 continue;
             }
 
-            $record  = $operators[$operator];
-            $segment = $this->segmentAt($lines, $line);
+            $record                               = $operators[$operator];
+            $segment                              = $this->segmentAt($lines, $line);
             $groups[$segment][$record['group']][] = [
                 'line'   => $line,
                 'column' => $record['column'],

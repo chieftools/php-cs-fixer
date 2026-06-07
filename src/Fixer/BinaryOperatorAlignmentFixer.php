@@ -426,12 +426,23 @@ PHP,
         $segment = 0;
 
         for ($i = 0; $i < $line; $i++) {
-            if (trim($lines[$i]['content']) === '') {
+            if ($this->isSegmentBoundaryLine($lines[$i]['content'])) {
                 $segment++;
             }
         }
 
         return $segment;
+    }
+
+    private function isSegmentBoundaryLine(string $line): bool
+    {
+        $content = trim($line);
+
+        return $content === ''
+            || str_starts_with($content, '//')
+            || str_starts_with($content, '#')
+            || str_starts_with($content, '/*')
+            || str_starts_with($content, '*');
     }
 
     /**

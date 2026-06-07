@@ -183,6 +183,24 @@ PHP;
         $this->assertSame($expected, $this->fix($source));
     }
 
+    public function testItDoesNotAlignEnumCaseAssignmentsAcrossComments(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+enum Values: string
+{
+    /** First value. */
+    case A = 'a';
+    /** Second value. */
+    case BB = 'bb';
+}
+
+PHP;
+
+        $this->assertSame($source, $this->fix($source));
+    }
+
     public function testItAlignsObjectPropertyAssignments(): void
     {
         $source = <<<'PHP'

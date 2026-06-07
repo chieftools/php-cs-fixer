@@ -51,6 +51,7 @@ PHP,
     protected function applyFix(SplFileInfo $file, Tokens $tokens): void
     {
         $lineEnding = $this->whitespacesConfig->getLineEnding();
+        $isTestFile = str_ends_with($file->getFilename(), 'Test.php');
 
         for ($index = 1, $count = count($tokens); $index < $count; $index++) {
             if (!$tokens[$index]->isObjectOperator()) {
@@ -65,7 +66,7 @@ PHP,
 
             $anchorIndex = $this->chainIndentAnchor($tokens, $index);
 
-            if ($anchorIndex === null || !$this->isNestedArgumentExpression($tokens, $anchorIndex)) {
+            if ($anchorIndex === null || !$this->isNestedArgumentExpression($tokens, $anchorIndex, $isTestFile)) {
                 continue;
             }
 
@@ -182,11 +183,15 @@ PHP,
         return $segmentEndIndex;
     }
 
-    private function isNestedArgumentExpression(Tokens $tokens, int $anchorIndex): bool
+    private function isNestedArgumentExpression(Tokens $tokens, int $anchorIndex, bool $isTestFile): bool
     {
         $firstMeaningfulIndex = $this->firstMeaningfulTokenOnLine($tokens, $anchorIndex);
 
         if ($this->lineStartsWithStatementKeyword($tokens, $firstMeaningfulIndex)) {
+            return false;
+        }
+
+        if ($isTestFile && $this->isInsidePestDefinition($tokens, $firstMeaningfulIndex)) {
             return false;
         }
 
@@ -215,6 +220,96 @@ PHP,
         }
 
         return false;
+    }
+
+    private function isInsidePestDefinition(Tokens $tokens, int $index): bool
+    {
+        for ($i = $index - 1; $i >= 0; $i--) {
+            if (!$tokens[$i]->equals('{')) {
+                continue;
+            }
+
+            $block = Tokens::detectBlockType($tokens[$i]);
+
+            if ($block === null || !$block['isStart'] || $block['type'] !== Tokens::BLOCK_TYPE_CURLY_BRACE) {
+                continue;
+            }
+
+            if ($tokens->findBlockEnd(Tokens::BLOCK_TYPE_CURLY_BRACE, $i) <= $index) {
+                continue;
+            }
+
+            $functionIndex = $this->functionIndexBeforeBody($tokens, $i);
+
+            if ($functionIndex !== null && $this->isAnonymousFunction($tokens, $functionIndex) && $this->isFunctionArgumentToPestDefinition($tokens, $functionIndex)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function functionIndexBeforeBody(Tokens $tokens, int $bodyStartIndex): ?int
+    {
+        for ($i = $bodyStartIndex - 1; $i >= 0; $i--) {
+            if ($tokens[$i]->isGivenKind(T_FUNCTION)) {
+                return $i;
+            }
+
+            if ($tokens[$i]->equals(';')) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    private function isAnonymousFunction(Tokens $tokens, int $functionIndex): bool
+    {
+        $nextMeaningfulIndex = $tokens->getNextMeaningfulToken($functionIndex);
+
+        return $nextMeaningfulIndex !== null && $tokens[$nextMeaningfulIndex]->equals('(');
+    }
+
+    private function isFunctionArgumentToPestDefinition(Tokens $tokens, int $functionIndex): bool
+    {
+        for ($i = $functionIndex - 1; $i >= 0; $i--) {
+            if ($tokens[$i]->equals(')')) {
+                $i = $tokens->findBlockStart(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $i);
+
+                continue;
+            }
+
+            if (!$tokens[$i]->equals('(')) {
+                continue;
+            }
+
+            if ($tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $i) <= $functionIndex) {
+                continue;
+            }
+
+            return $this->isPestDefinitionCallParenthesis($tokens, $i);
+        }
+
+        return false;
+    }
+
+    private function isPestDefinitionCallParenthesis(Tokens $tokens, int $openingParenthesisIndex): bool
+    {
+        $nameIndex = $tokens->getPrevMeaningfulToken($openingParenthesisIndex);
+
+        if ($nameIndex === null || !$tokens[$nameIndex]->isGivenKind(T_STRING)) {
+            return false;
+        }
+
+        if (!in_array(strtolower($tokens[$nameIndex]->getContent()), ['describe', 'it', 'test'], true)) {
+            return false;
+        }
+
+        $beforeNameIndex = $tokens->getPrevMeaningfulToken($nameIndex);
+
+        return $beforeNameIndex === null
+            || (!$tokens[$beforeNameIndex]->isObjectOperator() && !$tokens[$beforeNameIndex]->isGivenKind(T_DOUBLE_COLON));
     }
 
     private function lineContainsAssignmentBefore(Tokens $tokens, int $lineStartIndex, int $index): bool

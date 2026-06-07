@@ -159,6 +159,88 @@ PHP;
         $this->assertSame($source, $this->fix($source));
     }
 
+    public function testItAlignsCallbackChainsOutsidePestDefinitions(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+wrap(function () {
+    value($item)->one()
+        ->two()
+        ->three();
+});
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+wrap(function () {
+    value($item)->one()
+                ->two()
+                ->three();
+});
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
+    }
+
+    public function testItKeepsChainsIndentedByTheNativeFixerInsidePestDefinitions(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+it('first', function () {
+    value($item)->one()
+        ->two()
+        ->three();
+});
+
+test('second', function () {
+    value($item)->one()
+        ->two()
+        ->three();
+});
+
+describe('third', function () {
+    value($item)->one()
+        ->two()
+        ->three();
+});
+
+PHP;
+
+        $this->assertSame($source, $this->fix($source));
+    }
+
+    public function testItOnlyKeepsPestDefinitionChainsIndentedByTheNativeFixerInTestFiles(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+test('value', function () {
+    value($item)->one()
+        ->two()
+        ->three();
+});
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+test('value', function () {
+    value($item)->one()
+                ->two()
+                ->three();
+});
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source, 'Source.php'));
+    }
+
     public function testItIgnoresObjectAccessInsidePreviousLineArguments(): void
     {
         $source = <<<'PHP'
@@ -175,12 +257,13 @@ PHP;
         $this->assertSame($source, $this->fix($source));
     }
 
-    private function fix(string $source): string
+    private function fix(string $source, string $filename = __FILE__): string
     {
         $tokens = Tokens::fromCode($source);
+        $file   = new SplFileInfo($filename);
 
-        (new MethodChainingIndentationFixer)->fix(new SplFileInfo(__FILE__), $tokens);
-        (new NestedMethodChainingIndentationFixer)->fix(new SplFileInfo(__FILE__), $tokens);
+        (new MethodChainingIndentationFixer)->fix($file, $tokens);
+        (new NestedMethodChainingIndentationFixer)->fix($file, $tokens);
 
         return $tokens->generateCode();
     }

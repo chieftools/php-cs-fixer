@@ -32,7 +32,7 @@ return call(
         ->filter()
 );
 
-PHP
+PHP,
                 ),
             ],
         );
@@ -63,7 +63,7 @@ PHP
                 continue;
             }
 
-            $anchorIndex = $this->firstObjectOperatorOnPreviousMeaningfulLine($tokens, $index);
+            $anchorIndex = $this->firstChainObjectOperatorOnPreviousMeaningfulLine($tokens, $index);
 
             if ($anchorIndex === null || !$this->isNestedArgumentExpression($tokens, $anchorIndex)) {
                 continue;
@@ -80,7 +80,7 @@ PHP
         }
     }
 
-    private function firstObjectOperatorOnPreviousMeaningfulLine(Tokens $tokens, int $index): ?int
+    private function firstChainObjectOperatorOnPreviousMeaningfulLine(Tokens $tokens, int $index): ?int
     {
         $previousMeaningfulIndex = $tokens->getPrevMeaningfulToken($index);
 
@@ -91,12 +91,55 @@ PHP
         $lineStartIndex = $this->lineStartIndex($tokens, $previousMeaningfulIndex);
 
         for ($i = $lineStartIndex; $i <= $previousMeaningfulIndex; $i++) {
-            if ($tokens[$i]->isObjectOperator()) {
+            if ($tokens[$i]->isObjectOperator() && $this->chainContinuesTo($tokens, $i, $previousMeaningfulIndex)) {
                 return $i;
             }
         }
 
         return null;
+    }
+
+    private function chainContinuesTo(Tokens $tokens, int $objectOperatorIndex, int $endIndex): bool
+    {
+        $cursor = $objectOperatorIndex;
+
+        while (true) {
+            $segmentEndIndex = $this->chainSegmentEnd($tokens, $cursor);
+
+            if ($segmentEndIndex === null || $segmentEndIndex > $endIndex) {
+                return false;
+            }
+
+            if ($segmentEndIndex === $endIndex) {
+                return true;
+            }
+
+            $nextMeaningfulIndex = $tokens->getNextMeaningfulToken($segmentEndIndex);
+
+            if ($nextMeaningfulIndex === null || $nextMeaningfulIndex > $endIndex || !$tokens[$nextMeaningfulIndex]->isObjectOperator()) {
+                return false;
+            }
+
+            $cursor = $nextMeaningfulIndex;
+        }
+    }
+
+    private function chainSegmentEnd(Tokens $tokens, int $objectOperatorIndex): ?int
+    {
+        $memberIndex = $tokens->getNextMeaningfulToken($objectOperatorIndex);
+
+        if ($memberIndex === null) {
+            return null;
+        }
+
+        $segmentEndIndex     = $memberIndex;
+        $nextMeaningfulIndex = $tokens->getNextMeaningfulToken($segmentEndIndex);
+
+        if ($nextMeaningfulIndex !== null && $tokens[$nextMeaningfulIndex]->equals('(')) {
+            return $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $nextMeaningfulIndex);
+        }
+
+        return $segmentEndIndex;
     }
 
     private function isNestedArgumentExpression(Tokens $tokens, int $anchorIndex): bool

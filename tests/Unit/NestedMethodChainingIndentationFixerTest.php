@@ -78,6 +78,22 @@ PHP;
         $this->assertSame($expected, $this->fix($source));
     }
 
+    public function testItIgnoresObjectAccessInsidePreviousLineArguments(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function checkResponse($context)
+{
+    request(resolve([$context->identifier]))
+        ->assertValid();
+}
+
+PHP;
+
+        $this->assertSame($source, $this->fix($source));
+    }
+
     private function fix(string $source): string
     {
         $tokens = Tokens::fromCode($source);

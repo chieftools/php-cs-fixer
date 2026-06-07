@@ -1,0 +1,54 @@
+{
+    "name": "chieftools/php-cs-fixer",
+    "description": "Opinionated PHP CS Fixer configuration for Chief Tools projects.",
+    "homepage": "https://chief.app",
+    "license": "MIT",
+    "type": "composer-plugin",
+    "require": {
+        "php": "^8.2",
+        "composer-plugin-api": "^2.6",
+        "friendsofphp/php-cs-fixer": "^3.95"
+    },
+    "require-dev": {
+        "composer/composer": "^2.8",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^11.5|^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "ChiefTools\\PhpCsFixer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ChiefTools\\PhpCsFixer\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "class": "ChiefTools\\PhpCsFixer\\Composer\\Plugin",
+        "plugin-optional": true
+    },
+    "scripts": {
+        "check": [
+            "@test",
+            "@phpcs:ci",
+            "@phpstan"
+        ],
+        "test": "phpunit --colors=always",
+        "test:ci": "phpunit --colors=always",
+        "phpcs": "php-cs-fixer fix",
+        "phpcs:ci": "php-cs-fixer fix --dry-run --diff",
+        "phpstan": "phpstan analyse --memory-limit=1G",
+        "phpstan:ci": "phpstan analyse --memory-limit=1G --error-format=github"
+    },
+    "config": {
+        "allow-plugins": {
+            "chieftools/php-cs-fixer": true
+        },
+        "platform": {
+            "php": "8.2.0"
+        },
+        "sort-packages": true,
+        "preferred-install": "dist"
+    }
+}

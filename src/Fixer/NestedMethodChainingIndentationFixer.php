@@ -63,7 +63,7 @@ PHP,
                 continue;
             }
 
-            $anchorIndex = $this->firstChainObjectOperatorOnPreviousMeaningfulLine($tokens, $index);
+            $anchorIndex = $this->chainIndentAnchor($tokens, $index);
 
             if ($anchorIndex === null || !$this->isNestedArgumentExpression($tokens, $anchorIndex)) {
                 continue;
@@ -80,6 +80,17 @@ PHP,
         }
     }
 
+    private function chainIndentAnchor(Tokens $tokens, int $index): ?int
+    {
+        $anchorIndex = $this->firstChainObjectOperatorOnPreviousMeaningfulLine($tokens, $index);
+
+        if ($anchorIndex !== null) {
+            return $anchorIndex;
+        }
+
+        return $this->firstChainObjectOperatorBeforePreviousCall($tokens, $index);
+    }
+
     private function firstChainObjectOperatorOnPreviousMeaningfulLine(Tokens $tokens, int $index): ?int
     {
         $previousMeaningfulIndex = $tokens->getPrevMeaningfulToken($index);
@@ -88,10 +99,39 @@ PHP,
             return null;
         }
 
-        $lineStartIndex = $this->lineStartIndex($tokens, $previousMeaningfulIndex);
+        return $this->firstChainObjectOperatorOnLineContinuingTo($tokens, $previousMeaningfulIndex, $previousMeaningfulIndex);
+    }
 
-        for ($i = $lineStartIndex; $i <= $previousMeaningfulIndex; $i++) {
-            if ($tokens[$i]->isObjectOperator() && $this->chainContinuesTo($tokens, $i, $previousMeaningfulIndex)) {
+    private function firstChainObjectOperatorBeforePreviousCall(Tokens $tokens, int $index): ?int
+    {
+        $previousMeaningfulIndex = $tokens->getPrevMeaningfulToken($index);
+
+        if ($previousMeaningfulIndex === null || !$tokens[$previousMeaningfulIndex]->equals(')')) {
+            return null;
+        }
+
+        $openingParenthesisIndex = $tokens->findBlockStart(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $previousMeaningfulIndex);
+        $methodNameIndex         = $tokens->getPrevMeaningfulToken($openingParenthesisIndex);
+
+        if ($methodNameIndex === null) {
+            return null;
+        }
+
+        $objectOperatorIndex = $tokens->getPrevMeaningfulToken($methodNameIndex);
+
+        if ($objectOperatorIndex === null || !$tokens[$objectOperatorIndex]->isObjectOperator()) {
+            return null;
+        }
+
+        return $this->firstChainObjectOperatorOnLineContinuingTo($tokens, $objectOperatorIndex, $previousMeaningfulIndex);
+    }
+
+    private function firstChainObjectOperatorOnLineContinuingTo(Tokens $tokens, int $lineIndex, int $endIndex): ?int
+    {
+        $lineStartIndex = $this->lineStartIndex($tokens, $lineIndex);
+
+        for ($i = $lineStartIndex; $i <= $lineIndex; $i++) {
+            if ($tokens[$i]->isObjectOperator() && $this->chainContinuesTo($tokens, $i, $endIndex)) {
                 return $i;
             }
         }
@@ -150,6 +190,10 @@ PHP,
             return false;
         }
 
+        if ($this->lineContainsAssignmentBefore($tokens, $firstMeaningfulIndex, $anchorIndex)) {
+            return false;
+        }
+
         for ($i = $firstMeaningfulIndex - 1; $i >= 0; $i--) {
             if ($tokens[$i]->equals(')')) {
                 $i = $tokens->findBlockStart(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $i);
@@ -168,6 +212,35 @@ PHP,
             }
 
             return $this->isCallLikeParenthesis($tokens, $i);
+        }
+
+        return false;
+    }
+
+    private function lineContainsAssignmentBefore(Tokens $tokens, int $lineStartIndex, int $index): bool
+    {
+        for ($i = $lineStartIndex; $i < $index; $i++) {
+            if ($tokens[$i]->equals('=')) {
+                return true;
+            }
+
+            if ($tokens[$i]->isGivenKind([
+                T_AND_EQUAL,
+                T_COALESCE_EQUAL,
+                T_CONCAT_EQUAL,
+                T_DIV_EQUAL,
+                T_MINUS_EQUAL,
+                T_MOD_EQUAL,
+                T_MUL_EQUAL,
+                T_OR_EQUAL,
+                T_PLUS_EQUAL,
+                T_POW_EQUAL,
+                T_SL_EQUAL,
+                T_SR_EQUAL,
+                T_XOR_EQUAL,
+            ])) {
+                return true;
+            }
         }
 
         return false;

@@ -78,6 +78,100 @@ PHP;
         $this->assertSame($expected, $this->fix($source));
     }
 
+    public function testItKeepsNestedChainsAlignedAfterMultilineArguments(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function build($record, $owner)
+{
+    wrap(
+        $record->children()
+            ->create([
+                'state' => 'open',
+                'owner_id' => $owner->id,
+            ])
+            ->finish(),
+    );
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+function build($record, $owner)
+{
+    wrap(
+        $record->children()
+               ->create([
+                   'state' => 'open',
+                   'owner_id' => $owner->id,
+               ])
+               ->finish(),
+    );
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
+    }
+
+    public function testItKeepsStatementLevelChainsWithMultilineArgumentsIndentedByTheNativeFixer(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function build($record, $owner)
+{
+    $record->children()
+           ->create([
+               'state' => 'open',
+               'owner_id' => $owner->id,
+           ])
+           ->finish();
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+function build($record, $owner)
+{
+    $record->children()
+        ->create([
+            'state' => 'open',
+            'owner_id' => $owner->id,
+        ])
+        ->finish();
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
+    }
+
+    public function testItKeepsAssignmentChainsInsideNestedArgumentsIndentedByTheNativeFixer(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function build($target, $source)
+{
+    wrap(function () use ($target, $source) {
+        $result = $target->items
+            ->where('user_id', '=', $source->user_id)
+            ->where('type', '=', $source->value->type)
+            ->sole();
+    });
+}
+
+PHP;
+
+        $this->assertSame($source, $this->fix($source));
+    }
+
     public function testItIgnoresObjectAccessInsidePreviousLineArguments(): void
     {
         $source = <<<'PHP'

@@ -215,6 +215,10 @@ PHP,
             return !$this->isArrowFunctionArrow($tokens, $index);
         }
 
+        if ($tokens[$index]->isGivenKind(T_COALESCE_EQUAL)) {
+            return $this->isAssignmentTarget($tokens, $index);
+        }
+
         if (!$tokens[$index]->equals('=')) {
             return false;
         }

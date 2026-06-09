@@ -42,6 +42,35 @@ PHP;
         $this->assertSame($expected, $this->fix($source));
     }
 
+    public function testItAlignsCoalesceAssignmentsWithAssignments(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function values(): void
+{
+    $foo ??= $bar;
+    $longer ??= $baz;
+    $evenLonger = $something;
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+function values(): void
+{
+    $foo        ??= $bar;
+    $longer     ??= $baz;
+    $evenLonger = $something;
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
+    }
+
     public function testItDoesNotAlignAssignmentsAcrossBlankLines(): void
     {
         $source = <<<'PHP'

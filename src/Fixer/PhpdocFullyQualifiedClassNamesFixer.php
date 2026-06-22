@@ -72,9 +72,7 @@ PHP
         }
     }
 
-    /**
-     * @return array<string, string>
-     */
+    /** @return array<string, string> */
     private function imports(string $code): array
     {
         $declarations = $this->importDeclarations($code);
@@ -93,9 +91,7 @@ PHP
         return $imports;
     }
 
-    /**
-     * @return list<string>
-     */
+    /** @return list<string> */
     private function importDeclarations(string $code): array
     {
         $boundary = preg_match('/^\s*(?:abstract\s+|final\s+|readonly\s+)?(?:class|interface|trait|enum)\s+/m', $code, $matches, PREG_OFFSET_CAPTURE)
@@ -107,9 +103,7 @@ PHP
         return array_map('trim', $matches[1]);
     }
 
-    /**
-     * @param array<string, string> $imports
-     */
+    /** @param array<string, string> $imports */
     private function addGroupedImports(array &$imports, string $declaration): void
     {
         if (!preg_match('/^(?<prefix>[^{}]+)\\\\\{(?<classes>.+)}$/', $declaration, $matches)) {
@@ -121,9 +115,7 @@ PHP
         }
     }
 
-    /**
-     * @param array<string, string> $imports
-     */
+    /** @param array<string, string> $imports */
     private function addImport(array &$imports, string $declaration): void
     {
         $declaration = ltrim($declaration, '\\');
@@ -147,9 +139,7 @@ PHP
         $imports[$alias] = '\\' . $declaration;
     }
 
-    /**
-     * @param array<string, string> $imports
-     */
+    /** @param array<string, string> $imports */
     private function fixPhpDoc(string $content, array $imports): string
     {
         return preg_replace_callback(
@@ -159,9 +149,7 @@ PHP
         ) ?? $content;
     }
 
-    /**
-     * @param array<string, string> $imports
-     */
+    /** @param array<string, string> $imports */
     private function expandImportedNames(string $annotation, array $imports): string
     {
         foreach ($imports as $alias => $fullyQualifiedClassName) {

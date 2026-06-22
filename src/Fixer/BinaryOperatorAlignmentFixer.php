@@ -84,9 +84,7 @@ PHP,
         }
     }
 
-    /**
-     * @return list<array{content: string, ending: string}>
-     */
+    /** @return list<array{content: string, ending: string}> */
     private function lines(string $code): array
     {
         $parts = preg_split('/(\R)/', $code, -1, PREG_SPLIT_DELIM_CAPTURE);
@@ -107,9 +105,7 @@ PHP,
         return $lines;
     }
 
-    /**
-     * @return array<int, array<string, array{column: int, equalOffset: int, group: string}>>
-     */
+    /** @return array<int, array<string, array{column: int, equalOffset: int, group: string}>> */
     private function operatorRecords(Tokens $tokens): array
     {
         $analyzer = new TokensAnalyzer($tokens);
@@ -145,9 +141,7 @@ PHP,
         return $records;
     }
 
-    /**
-     * @return array<int, list<int>>
-     */
+    /** @return array<int, list<int>> */
     private function nonTargetAssignmentRecords(Tokens $tokens): array
     {
         $analyzer = new TokensAnalyzer($tokens);
@@ -437,9 +431,7 @@ PHP,
         return $lines;
     }
 
-    /**
-     * @param list<array{content: string, ending: string}> $lines
-     */
+    /** @param list<array{content: string, ending: string}> $lines */
     private function canInlineAssignmentContinuation(array $lines, int $line): bool
     {
         if (!isset($lines[$line])) {
@@ -451,9 +443,7 @@ PHP,
         return $content !== '' && str_ends_with($content, ';');
     }
 
-    /**
-     * @param list<array{content: string, ending: string}> $lines
-     */
+    /** @param list<array{content: string, ending: string}> $lines */
     private function segmentAt(array $lines, int $line): int
     {
         $segment = 0;

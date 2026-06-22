@@ -11,9 +11,7 @@ use ChiefTools\PhpCsFixer\Fixer\NestedMethodChainingIndentationFixer;
 
 class Config
 {
-    /**
-     * @param array<string, mixed> $rules
-     */
+    /** @param array<string, mixed> $rules */
     public static function make(Finder $finder, array $rules = []): PhpCsFixerConfig
     {
         return (new PhpCsFixerConfig)
@@ -29,9 +27,7 @@ class Config
             ->setFinder($finder);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     public static function rules(): array
     {
         return [
@@ -88,6 +84,16 @@ class Config
             'phpdoc_annotation_without_dot'                    => true,
             'phpdoc_indent'                                    => true,
             'phpdoc_inline_tag_normalizer'                     => true,
+            'phpdoc_line_span'                                 => [
+                'case'         => 'single',
+                'class'        => 'single',
+                'const'        => 'single',
+                'function'     => 'single',
+                'method'       => 'single',
+                'other'        => 'single',
+                'property'     => 'single',
+                'trait_import' => 'single',
+            ],
             'phpdoc_no_access'                                 => true,
             'phpdoc_no_package'                                => true,
             'phpdoc_no_useless_inheritdoc'                     => true,

@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use PhpCsFixer\Tokenizer\Tokens;
 use ChiefTools\PhpCsFixer\Config;
 use PhpCsFixer\Config as PhpCsFixerConfig;
+use PhpCsFixer\Fixer\Phpdoc\PhpdocLineSpanFixer;
 use PhpCsFixer\Fixer\Operator\BinaryOperatorSpacesFixer;
 use ChiefTools\PhpCsFixer\Fixer\BinaryOperatorAlignmentFixer;
 
@@ -158,6 +159,63 @@ PHP;
         $this->assertSame($source, $this->fixBinaryOperators($source));
     }
 
+    public function testPhpdocsWithOneContentLineAreCollapsed(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+class Fixture
+{
+    /**
+     * @return string
+     */
+    public function value(): string
+    {
+        return 'value';
+    }
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+class Fixture
+{
+    /** @return string */
+    public function value(): string
+    {
+        return 'value';
+    }
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fixPhpdocLineSpan($source));
+    }
+
+    public function testMultiLinePhpdocsStayMultiLine(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+class Fixture
+{
+    /**
+     * @param string $value
+     * @return string
+     */
+    public function value(string $value): string
+    {
+        return $value;
+    }
+}
+
+PHP;
+
+        $this->assertSame($source, $this->fixPhpdocLineSpan($source));
+    }
+
     private function fixBinaryOperators(string $source): string
     {
         $config = Config::rules()['binary_operator_spaces'];
@@ -168,6 +226,19 @@ PHP;
         $fixer->configure($config);
         $fixer->fix(new SplFileInfo(__FILE__), $tokens);
         (new BinaryOperatorAlignmentFixer)->fix(new SplFileInfo(__FILE__), $tokens);
+
+        return $tokens->generateCode();
+    }
+
+    private function fixPhpdocLineSpan(string $source): string
+    {
+        $config = Config::rules()['phpdoc_line_span'];
+        $tokens = Tokens::fromCode($source);
+        $fixer  = new PhpdocLineSpanFixer;
+
+        $this->assertIsArray($config);
+        $fixer->configure($config);
+        $fixer->fix(new SplFileInfo(__FILE__), $tokens);
 
         return $tokens->generateCode();
     }

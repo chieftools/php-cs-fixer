@@ -18,9 +18,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface
 
     public function uninstall(Composer $composer, IOInterface $io): void {}
 
-    /**
-     * @return array<string, string>
-     */
+    /** @return array<string, string> */
     public static function getSubscribedEvents(): array
     {
         return [

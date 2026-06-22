@@ -63,7 +63,67 @@ function values(): void
 {
     $foo        ??= $bar;
     $longer     ??= $baz;
-    $evenLonger = $something;
+    $evenLonger   = $something;
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
+    }
+
+    public function testItAlignsAssignmentOperatorsByEqualsSign(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function values(): void
+{
+    $foo ??= true;
+    $mask = 1;
+    $result .= 2;
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+function values(): void
+{
+    $foo    ??= true;
+    $mask     = 1;
+    $result  .= 2;
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
+    }
+
+    public function testItAlignsOtherCompoundAssignmentOperatorsByEqualsSign(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function values(): void
+{
+    $total += 1;
+    $difference -= 2;
+    $mask &= 4;
+    $power **= 2;
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+function values(): void
+{
+    $total       += 1;
+    $difference  -= 2;
+    $mask        &= 4;
+    $power      **= 2;
 }
 
 PHP;

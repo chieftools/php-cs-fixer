@@ -12,6 +12,22 @@ use PhpCsFixer\FixerDefinition\FixerDefinitionInterface;
 
 class BinaryOperatorAlignmentFixer extends AbstractFixer
 {
+    private const COMPOUND_ASSIGNMENT_OPERATOR_KINDS = [
+        T_AND_EQUAL,
+        T_COALESCE_EQUAL,
+        T_CONCAT_EQUAL,
+        T_DIV_EQUAL,
+        T_MINUS_EQUAL,
+        T_MOD_EQUAL,
+        T_MUL_EQUAL,
+        T_OR_EQUAL,
+        T_PLUS_EQUAL,
+        T_POW_EQUAL,
+        T_SL_EQUAL,
+        T_SR_EQUAL,
+        T_XOR_EQUAL,
+    ];
+
     public function getName(): string
     {
         return 'ChiefTools/binary_operator_alignment';
@@ -92,7 +108,7 @@ PHP,
     }
 
     /**
-     * @return array<int, array<string, array{column: int, group: string}>>
+     * @return array<int, array<string, array{column: int, equalOffset: int, group: string}>>
      */
     private function operatorRecords(Tokens $tokens): array
     {
@@ -108,8 +124,9 @@ PHP,
                 $operator = $token->isGivenKind(T_DOUBLE_ARROW) ? '=>' : '=';
 
                 $records[$line][$operator] ??= [
-                    'column' => $column,
-                    'group'  => $this->operatorGroup($tokens, $index, $operator),
+                    'column'      => $column,
+                    'equalOffset' => $this->operatorEqualOffset($tokens, $index),
+                    'group'       => $this->operatorGroup($tokens, $index, $operator),
                 ];
             }
 
@@ -121,8 +138,8 @@ PHP,
                 continue;
             }
 
-            $line += count($parts) - 1;
-            $column = strlen($parts[array_key_last($parts)]);
+            $line   += count($parts) - 1;
+            $column  = strlen($parts[array_key_last($parts)]);
         }
 
         return $records;
@@ -157,8 +174,8 @@ PHP,
                 continue;
             }
 
-            $line += count($parts) - 1;
-            $column = strlen($parts[array_key_last($parts)]);
+            $line   += count($parts) - 1;
+            $column  = strlen($parts[array_key_last($parts)]);
         }
 
         return $records;
@@ -215,19 +232,30 @@ PHP,
             return !$this->isArrowFunctionArrow($tokens, $index);
         }
 
-        if ($tokens[$index]->isGivenKind(T_COALESCE_EQUAL)) {
-            return $this->isAssignmentTarget($tokens, $index);
-        }
-
-        if (!$tokens[$index]->equals('=')) {
+        if (!$this->isAssignmentOperator($tokens, $index)) {
             return false;
         }
 
-        if (!$analyzer->isBinaryOperator($index)) {
+        if ($tokens[$index]->equals('=') && !$analyzer->isBinaryOperator($index)) {
             return false;
         }
 
         return $this->isAssignmentTarget($tokens, $index);
+    }
+
+    private function isAssignmentOperator(Tokens $tokens, int $index): bool
+    {
+        return $tokens[$index]->equals('=')
+            || $tokens[$index]->isGivenKind(self::COMPOUND_ASSIGNMENT_OPERATOR_KINDS);
+    }
+
+    private function operatorEqualOffset(Tokens $tokens, int $index): int
+    {
+        if ($tokens[$index]->isGivenKind(T_DOUBLE_ARROW)) {
+            return 0;
+        }
+
+        return strlen($tokens[$index]->getContent()) - 1;
     }
 
     private function isAssignmentTarget(Tokens $tokens, int $index): bool
@@ -334,8 +362,8 @@ PHP,
     }
 
     /**
-     * @param list<array{content: string, ending: string}>                 $lines
-     * @param array<int, array<string, array{column: int, group: string}>> $records
+     * @param list<array{content: string, ending: string}>                                   $lines
+     * @param array<int, array<string, array{column: int, equalOffset: int, group: string}>> $records
      *
      * @return list<array{content: string, ending: string}>
      */
@@ -351,8 +379,9 @@ PHP,
             $record                               = $operators[$operator];
             $segment                              = $this->segmentAt($lines, $line);
             $groups[$segment][$record['group']][] = [
-                'line'   => $line,
-                'column' => $record['column'],
+                'line'        => $line,
+                'column'      => $record['column'],
+                'equalOffset' => $record['equalOffset'],
             ];
         }
 
@@ -450,28 +479,31 @@ PHP,
     }
 
     /**
-     * @param list<array{content: string, ending: string}>  $lines
-     * @param non-empty-list<array{line: int, column: int}> $group
+     * @param list<array{content: string, ending: string}>                    $lines
+     * @param non-empty-list<array{line: int, column: int, equalOffset: int}> $group
      *
      * @return list<array{content: string, ending: string}>
      */
     private function alignGroup(array $lines, array $group): array
     {
-        $targetColumn = 0;
+        $targetColumn      = 0;
+        $targetEqualOffset = 0;
 
         foreach ($group as $record) {
             $before = substr($lines[$record['line']]['content'], 0, $record['column']);
 
-            $targetColumn = max($targetColumn, strlen(rtrim($before)) + 1);
+            $targetColumn      = max($targetColumn, strlen(rtrim($before)) + 1);
+            $targetEqualOffset = max($targetEqualOffset, $record['equalOffset']);
         }
 
         foreach ($group as $record) {
-            $line   = $lines[$record['line']]['content'];
-            $before = substr($line, 0, $record['column']);
-            $after  = substr($line, $record['column']);
-            $left   = rtrim($before);
+            $line             = $lines[$record['line']]['content'];
+            $before           = substr($line, 0, $record['column']);
+            $after            = substr($line, $record['column']);
+            $left             = rtrim($before);
+            $targetLineColumn = $targetColumn + $targetEqualOffset - $record['equalOffset'];
 
-            $lines[$record['line']]['content'] = $left . str_repeat(' ', max(1, $targetColumn - strlen($left))) . $after;
+            $lines[$record['line']]['content'] = $left . str_repeat(' ', max(1, $targetLineColumn - strlen($left))) . $after;
         }
 
         return $lines;

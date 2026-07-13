@@ -86,7 +86,7 @@ class Config
             'phpdoc_inline_tag_normalizer'                     => true,
             'phpdoc_line_span'                                 => [
                 'case'         => 'single',
-                'class'        => 'single',
+                'class'        => 'multi',
                 'const'        => 'single',
                 'function'     => 'single',
                 'method'       => 'single',

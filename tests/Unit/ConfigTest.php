@@ -194,6 +194,29 @@ PHP;
         $this->assertSame($expected, $this->fixPhpdocLineSpan($source));
     }
 
+    public function testSingleLineClassPhpdocsAreExpanded(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+/** Fixture description. */
+class Fixture {}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+/**
+ * Fixture description.
+ */
+class Fixture {}
+
+PHP;
+
+        $this->assertSame($expected, $this->fixPhpdocLineSpan($source));
+    }
+
     public function testMultiLinePhpdocsStayMultiLine(): void
     {
         $source = <<<'PHP'

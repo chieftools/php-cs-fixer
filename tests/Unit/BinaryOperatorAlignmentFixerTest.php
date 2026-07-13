@@ -422,6 +422,22 @@ PHP;
         $this->assertSame($expected, $this->fix($source));
     }
 
+    public function testItAlignsObjectPropertyArrayOffsetAssignments(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function update($item): void
+{
+    $item->values['a']      = 1;
+    $item->values['longer'] = 2;
+}
+
+PHP;
+
+        $this->assertSame($source, $this->fix($source));
+    }
+
     public function testItDoesNotAlignArrayOffsetAssignmentsAcrossDifferentControlStructureBlocks(): void
     {
         $source = <<<'PHP'

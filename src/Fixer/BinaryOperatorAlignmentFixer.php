@@ -290,11 +290,7 @@ PHP,
             return true;
         }
 
-        if (preg_match('/^\h*\$[A-Za-z_]\w*(?:->(?:\w+|\{.*\}))+\h*$/', $linePrefix) === 1) {
-            return true;
-        }
-
-        if (preg_match('/^\h*\$[A-Za-z_]\w*(?:\[[^\r\n]*\])+\h*$/', $linePrefix) === 1) {
+        if (preg_match('/^\h*\$[A-Za-z_]\w*(?:(?:->(?:\w+|\{.*\}))|(?:\[[^\r\n]*\]))+\h*$/', $linePrefix) === 1) {
             return true;
         }
 

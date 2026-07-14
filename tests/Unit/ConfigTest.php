@@ -12,6 +12,8 @@ use PhpCsFixer\Config as PhpCsFixerConfig;
 use PhpCsFixer\Fixer\Phpdoc\PhpdocLineSpanFixer;
 use PhpCsFixer\Fixer\Operator\BinaryOperatorSpacesFixer;
 use ChiefTools\PhpCsFixer\Fixer\BinaryOperatorAlignmentFixer;
+use PhpCsFixer\Fixer\ControlStructure\TrailingCommaInMultilineFixer;
+use PhpCsFixer\Fixer\FunctionNotation\MultilinePromotedPropertiesFixer;
 
 class ConfigTest extends TestCase
 {
@@ -25,6 +27,7 @@ class ConfigTest extends TestCase
         $this->assertTrue($config->getRules()['ChiefTools/binary_operator_alignment']);
         $this->assertTrue($config->getRules()['ChiefTools/phpdoc_fqcn']);
         $this->assertTrue($config->getRules()['ChiefTools/nested_method_chaining_indentation']);
+        $this->assertTrue($config->getRules()['multiline_promoted_properties']);
         $this->assertContains('ChiefTools/binary_operator_alignment', array_map(
             static fn ($fixer): string => $fixer->getName(),
             $config->getCustomFixers(),
@@ -239,6 +242,62 @@ PHP;
         $this->assertSame($source, $this->fixPhpdocLineSpan($source));
     }
 
+    public function testConstructorsWithPromotedPropertiesUseMultilineParameters(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+class Single
+{
+    public function __construct(private Client $client) {}
+}
+
+class Mixed
+{
+    public function __construct(string $name, protected Logger $logger, int $port = 80) {}
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+class Single
+{
+    public function __construct(
+        private Client $client,
+    ) {}
+}
+
+class Mixed
+{
+    public function __construct(
+        string $name,
+        protected Logger $logger,
+        int $port = 80,
+    ) {}
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fixPromotedProperties($source));
+    }
+
+    public function testConstructorsWithoutPromotedPropertiesStaySingleLine(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+class Fixture
+{
+    public function __construct(Client $client, Logger $logger) {}
+}
+
+PHP;
+
+        $this->assertSame($source, $this->fixPromotedProperties($source));
+    }
+
     private function fixBinaryOperators(string $source): string
     {
         $config = Config::rules()['binary_operator_spaces'];
@@ -262,6 +321,22 @@ PHP;
         $this->assertIsArray($config);
         $fixer->configure($config);
         $fixer->fix(new SplFileInfo(__FILE__), $tokens);
+
+        return $tokens->generateCode();
+    }
+
+    private function fixPromotedProperties(string $source): string
+    {
+        $trailingCommaConfig = Config::rules()['trailing_comma_in_multiline'];
+        $tokens              = Tokens::fromCode($source);
+        $file                = new SplFileInfo(__FILE__);
+        $trailingCommaFixer  = new TrailingCommaInMultilineFixer;
+
+        $this->assertIsArray($trailingCommaConfig);
+        $trailingCommaFixer->configure($trailingCommaConfig);
+
+        (new MultilinePromotedPropertiesFixer)->fix($file, $tokens);
+        $trailingCommaFixer->fix($file, $tokens);
 
         return $tokens->generateCode();
     }

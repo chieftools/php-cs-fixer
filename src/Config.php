@@ -53,6 +53,7 @@ class Config
             'magic_constant_casing'                            => true,
             'magic_method_casing'                              => true,
             'method_chaining_indentation'                      => true,
+            'multiline_promoted_properties'                    => true,
             'native_function_casing'                           => true,
             'native_type_declaration_casing'                   => true,
             'no_alias_language_construct_call'                 => true,

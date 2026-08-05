@@ -26,6 +26,7 @@ class ConfigTest extends TestCase
         $this->assertSame($finder, $config->getFinder());
         $this->assertTrue($config->getRules()['ChiefTools/binary_operator_alignment']);
         $this->assertTrue($config->getRules()['ChiefTools/phpdoc_fqcn']);
+        $this->assertTrue($config->getRules()['ChiefTools/multiline_method_chaining']);
         $this->assertTrue($config->getRules()['ChiefTools/nested_method_chaining_indentation']);
         $this->assertTrue($config->getRules()['multiline_promoted_properties']);
         $this->assertContains('ChiefTools/binary_operator_alignment', array_map(
@@ -33,6 +34,10 @@ class ConfigTest extends TestCase
             $config->getCustomFixers(),
         ));
         $this->assertContains('ChiefTools/phpdoc_fqcn', array_map(
+            static fn ($fixer): string => $fixer->getName(),
+            $config->getCustomFixers(),
+        ));
+        $this->assertContains('ChiefTools/multiline_method_chaining', array_map(
             static fn ($fixer): string => $fixer->getName(),
             $config->getCustomFixers(),
         ));

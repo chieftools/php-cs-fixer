@@ -6,6 +6,7 @@ use PhpCsFixer\Finder;
 use PhpCsFixer\Config as PhpCsFixerConfig;
 use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 use ChiefTools\PhpCsFixer\Fixer\BinaryOperatorAlignmentFixer;
+use ChiefTools\PhpCsFixer\Fixer\MultilineMethodChainingFixer;
 use ChiefTools\PhpCsFixer\Fixer\PhpdocFullyQualifiedClassNamesFixer;
 use ChiefTools\PhpCsFixer\Fixer\NestedMethodChainingIndentationFixer;
 
@@ -20,6 +21,7 @@ class Config
             ->setUnsupportedPhpVersionAllowed(true)
             ->registerCustomFixers([
                 new BinaryOperatorAlignmentFixer,
+                new MultilineMethodChainingFixer,
                 new NestedMethodChainingIndentationFixer,
                 new PhpdocFullyQualifiedClassNamesFixer,
             ])
@@ -35,6 +37,7 @@ class Config
 
             'ChiefTools/phpdoc_fqcn'                        => true,
             'ChiefTools/binary_operator_alignment'          => true,
+            'ChiefTools/multiline_method_chaining'          => true,
             'ChiefTools/nested_method_chaining_indentation' => true,
 
             'single_trait_insert_per_statement' => false,

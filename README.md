@@ -117,3 +117,14 @@ This rule keeps nested argument method chains aligned with the first object oper
 ```
 
 Statement-level chains still use PHP CS Fixer's regular `method_chaining_indentation` behavior.
+
+#### `ChiefTools/multiline_method_chaining`
+
+Once a method chain continues on a new line, each subsequent segment also starts on a new line:
+
+```diff
+  $items = $service->items()
+-     ->filter()->values();
++     ->filter()
++     ->values();
+```

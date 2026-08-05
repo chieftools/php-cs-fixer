@@ -90,10 +90,46 @@ PHP;
         $this->assertSame($source, $this->fix($source));
     }
 
-    private function fix(string $source): string
+    public function testItKeepsPestAndExpectationSegmentsTogetherInTestFiles(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+expect($first)->toBeTrue()
+    ->and($second)->toBeFalse()
+    ->and($third)->toBeNull();
+
+PHP;
+
+        $this->assertSame($source, $this->fix($source));
+    }
+
+    public function testItStillMovesSegmentsAfterAndMethodsOutsideTestFiles(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+$result = $query->first()
+    ->and($other)->finish();
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+$result = $query->first()
+    ->and($other)
+    ->finish();
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source, 'Source.php'));
+    }
+
+    private function fix(string $source, string $filename = __FILE__): string
     {
         $tokens = Tokens::fromCode($source);
-        $file   = new SplFileInfo(__FILE__);
+        $file   = new SplFileInfo($filename);
 
         (new MultilineMethodChainingFixer)->fix($file, $tokens);
         (new MethodChainingIndentationFixer)->fix($file, $tokens);

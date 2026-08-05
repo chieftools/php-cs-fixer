@@ -50,6 +50,7 @@ PHP,
     protected function applyFix(SplFileInfo $file, Tokens $tokens): void
     {
         $lineEnding = $this->whitespacesConfig->getLineEnding();
+        $isTestFile = str_ends_with($file->getFilename(), 'Test.php');
 
         for ($index = 1, $count = count($tokens); $index < $count; $index++) {
             if (!$tokens[$index]->isObjectOperator() || $this->startsOnNewLine($tokens, $index)) {
@@ -58,7 +59,11 @@ PHP,
 
             $previousOperatorIndex = $this->previousChainObjectOperator($tokens, $index);
 
-            if ($previousOperatorIndex === null || !$this->startsOnNewLine($tokens, $previousOperatorIndex)) {
+            if (
+                $previousOperatorIndex === null
+                || !$this->startsOnNewLine($tokens, $previousOperatorIndex)
+                || $isTestFile && $this->isAndExpectationSegment($tokens, $previousOperatorIndex)
+            ) {
                 continue;
             }
 
@@ -74,6 +79,15 @@ PHP,
             $index++;
             $count++;
         }
+    }
+
+    private function isAndExpectationSegment(Tokens $tokens, int $operatorIndex): bool
+    {
+        $methodNameIndex = $tokens->getNextMeaningfulToken($operatorIndex);
+
+        return $methodNameIndex !== null
+            && $tokens[$methodNameIndex]->isGivenKind(T_STRING)
+            && strtolower($tokens[$methodNameIndex]->getContent()) === 'and';
     }
 
     private function previousChainObjectOperator(Tokens $tokens, int $index): ?int

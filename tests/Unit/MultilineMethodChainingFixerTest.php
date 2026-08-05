@@ -118,6 +118,21 @@ PHP;
         $this->assertSame($source, $this->fix($source));
     }
 
+    public function testItKeepsPestPropertyExpectationSegmentsTogetherInTestFiles(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+expect($record)
+    ->toBeObject()
+    ->title->toBe($title)
+    ->status->toBe($status);
+
+PHP;
+
+        $this->assertSame($source, $this->fix($source));
+    }
+
     public function testItStillMovesSegmentsAfterAndMethodsOutsideTestFiles(): void
     {
         $source = <<<'PHP'
@@ -133,6 +148,28 @@ PHP;
 
 $result = $query->first()
     ->and($other)
+    ->finish();
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source, 'Source.php'));
+    }
+
+    public function testItStillMovesSegmentsAfterPropertiesOutsideTestFiles(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+$result = $query->first()
+    ->property->finish();
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+$result = $query->first()
+    ->property
     ->finish();
 
 PHP;

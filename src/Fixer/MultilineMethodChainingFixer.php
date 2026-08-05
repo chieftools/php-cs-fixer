@@ -85,9 +85,17 @@ PHP,
     {
         $methodNameIndex = $tokens->getNextMeaningfulToken($operatorIndex);
 
-        return $methodNameIndex !== null
-            && $tokens[$methodNameIndex]->isGivenKind(T_STRING)
-            && in_array(strtolower($tokens[$methodNameIndex]->getContent()), ['and', 'not'], true);
+        if ($methodNameIndex === null || !$tokens[$methodNameIndex]->isGivenKind(T_STRING)) {
+            return false;
+        }
+
+        if (strtolower($tokens[$methodNameIndex]->getContent()) === 'and') {
+            return true;
+        }
+
+        $nextMeaningfulIndex = $tokens->getNextMeaningfulToken($methodNameIndex);
+
+        return $nextMeaningfulIndex !== null && !$tokens[$nextMeaningfulIndex]->equals('(');
     }
 
     private function previousChainObjectOperator(Tokens $tokens, int $index): ?int

@@ -129,4 +129,4 @@ Once a method chain continues on a new line, each subsequent segment also starts
 +     ->values();
 ```
 
-In `*Test.php` files, Pest expectation segments such as `->and(...)->...` and `->not->...` stay together.
+In `*Test.php` files, Pest expectation segments such as `->and(...)->...`, `->not->...`, and `->property->...` stay together.

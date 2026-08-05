@@ -128,3 +128,5 @@ Once a method chain continues on a new line, each subsequent segment also starts
 +     ->filter()
 +     ->values();
 ```
+
+In `*Test.php` files, Pest expectation segments such as `->and(...)->...` and `->not->...` stay together.

@@ -104,6 +104,20 @@ PHP;
         $this->assertSame($source, $this->fix($source));
     }
 
+    public function testItKeepsPestNotExpectationSegmentsTogetherInTestFiles(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+expect($value)
+    ->toContain('included')
+    ->not->toContain('excluded');
+
+PHP;
+
+        $this->assertSame($source, $this->fix($source));
+    }
+
     public function testItStillMovesSegmentsAfterAndMethodsOutsideTestFiles(): void
     {
         $source = <<<'PHP'

@@ -62,7 +62,7 @@ PHP,
             if (
                 $previousOperatorIndex === null
                 || !$this->startsOnNewLine($tokens, $previousOperatorIndex)
-                || $isTestFile && $this->isAndExpectationSegment($tokens, $previousOperatorIndex)
+                || $isTestFile && $this->isPestExpectationSegment($tokens, $previousOperatorIndex)
             ) {
                 continue;
             }
@@ -81,13 +81,13 @@ PHP,
         }
     }
 
-    private function isAndExpectationSegment(Tokens $tokens, int $operatorIndex): bool
+    private function isPestExpectationSegment(Tokens $tokens, int $operatorIndex): bool
     {
         $methodNameIndex = $tokens->getNextMeaningfulToken($operatorIndex);
 
         return $methodNameIndex !== null
             && $tokens[$methodNameIndex]->isGivenKind(T_STRING)
-            && strtolower($tokens[$methodNameIndex]->getContent()) === 'and';
+            && in_array(strtolower($tokens[$methodNameIndex]->getContent()), ['and', 'not'], true);
     }
 
     private function previousChainObjectOperator(Tokens $tokens, int $index): ?int

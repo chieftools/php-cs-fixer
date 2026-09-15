@@ -65,23 +65,34 @@ PHP,
 
     protected function applyFix(SplFileInfo $file, Tokens $tokens): void
     {
-        $code                       = $tokens->generateCode();
-        $lines                      = $this->lines($code);
-        $records                    = $this->operatorRecords($tokens);
-        $nonTargetAssignmentRecords = $this->nonTargetAssignmentRecords($tokens);
+        $code    = $tokens->generateCode();
+        $lines   = $this->lines($code);
+        $records = $this->operatorRecords($tokens);
 
         $lines = $this->alignOperator($lines, $records, '=');
-        $lines = $this->alignOperator($lines, $records, '=>');
-        $lines = $this->normalizeAssignmentOperatorSpacing($lines, $nonTargetAssignmentRecords);
 
-        $fixedCode = implode('', array_map(
-            static fn (array $line): string => $line['content'] . $line['ending'],
-            $lines,
-        ));
+        $currentTokens = Tokens::fromCode($this->code($lines));
+        $records       = $this->operatorRecords($currentTokens);
+        $lines         = $this->alignOperator($lines, $records, '=>');
+
+        $currentTokens              = Tokens::fromCode($this->code($lines));
+        $nonTargetAssignmentRecords = $this->nonTargetAssignmentRecords($currentTokens);
+        $lines                      = $this->normalizeAssignmentOperatorSpacing($lines, $nonTargetAssignmentRecords);
+
+        $fixedCode = $this->code($lines);
 
         if ($fixedCode !== $code) {
             $tokens->setCode($fixedCode);
         }
+    }
+
+    /** @param list<array{content: string, ending: string}> $lines */
+    private function code(array $lines): string
+    {
+        return implode('', array_map(
+            static fn (array $line): string => $line['content'] . $line['ending'],
+            $lines,
+        ));
     }
 
     /** @return list<array{content: string, ending: string}> */

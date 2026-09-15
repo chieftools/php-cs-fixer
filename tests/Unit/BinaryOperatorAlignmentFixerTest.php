@@ -537,6 +537,37 @@ PHP;
         $this->assertSame($expected, $this->fix($source));
     }
 
+    public function testItAlignsArrayPairsAfterAssignmentsOnTheSameLine(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+function update(): void
+{
+    $asset              = 'placeholder.test';
+    $entry              = new stdClass;
+    $entry->attributes  = ['asset' => $asset];
+    $entry->persist();
+}
+
+PHP;
+
+        $expected = <<<'PHP'
+<?php
+
+function update(): void
+{
+    $asset             = 'placeholder.test';
+    $entry             = new stdClass;
+    $entry->attributes = ['asset' => $asset];
+    $entry->persist();
+}
+
+PHP;
+
+        $this->assertSame($expected, $this->fix($source));
+    }
+
     public function testItDoesNotAlignArrayPairsAcrossBlankLines(): void
     {
         $source = <<<'PHP'
